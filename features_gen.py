@@ -3,12 +3,14 @@ from typing import List
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer
+from pymystem3 import Mystem
 
 from sklearn.feature_selection import SelectKBest, chi2
 
 
 # TODO: lemmatize words before passing here (to distinguish different forms of a word)
 class FeaturesExtractor:
+    
     def __init__(self, n_gram=1, max_features=1000, min_occurrence_rate=1, max_occurrence_rate=1.0):
         self.count_vectorizer = CountVectorizer(
             encoding='utf-8',
@@ -17,12 +19,16 @@ class FeaturesExtractor:
             min_df=min_occurrence_rate,
             max_features=max_features
         )
+        self.mystem = Mystem()
 
+    def stem(self, raw_documents: List[str]):
+        return [self.mystem.lemmatize(doc) for doc in raw_documents]
+    
     def load_vocabulary(self, raw_documents: List[str]):
-        self.count_vectorizer.fit(raw_documents)
+        self.count_vectorizer.fit(self.stem(raw_documents))
 
     def get_features(self, samples: List[str]):
-        return self.count_vectorizer.transform(samples).toarray()
+        return self.count_vectorizer.transform(self.stem(samples)).toarray()
 
 
 # for in-place test
